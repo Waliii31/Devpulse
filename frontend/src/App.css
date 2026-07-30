@@ -1,6 +1,6 @@
+/* Landing page subtle grid background */
 body {
-  background-image: linear-gradient(var(--surface-elevated) 1px, transparent 1px), linear-gradient(90deg, var(--surface-elevated) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: none;
 }
 
 ::selection {

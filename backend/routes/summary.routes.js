@@ -1,10 +1,12 @@
 import express from 'express'
 import CachedUser from '../models/cachedUser.model.js'
+import User from '../models/user.model.js'
+import jwt from 'jsonwebtoken'
 
 const router = express.Router()
 const GROQ_URL = 'https://api.groq.com/v1/generation'
 
-const buildPrompt = (cachedUser) => {
+const buildPrompt = (cachedUser, tone) => {
   const topLanguages = Object.entries(cachedUser.languages || {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4)
@@ -16,7 +18,12 @@ const buildPrompt = (cachedUser) => {
     ? `${cachedUser.activity.length} recent activity entries, with latest event on ${cachedUser.activity[cachedUser.activity.length - 1].date}`
     : 'No recent activity data available'
 
-  return `Write a 2-3 sentence summary of this GitHub user in a friendly but professional tone. Keep it concise.
+  let toneInstruction = 'friendly but professional tone'
+  if (tone === 'motivational') toneInstruction = 'highly motivational, encouraging, and uplifting tone'
+  if (tone === 'technical') toneInstruction = 'blunt, highly technical, and analytical tone focusing on engineering metrics'
+  if (tone === 'recruiter') toneInstruction = 'recruiter-friendly tone, highlighting employable skills and consistency'
+
+  return `Write a 2-3 sentence summary of this GitHub user in a ${toneInstruction}. Keep it concise.
 
 Profile:
 - Name: ${cachedUser.profile.name}
@@ -45,8 +52,8 @@ const callGroq = async (prompt) => {
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'groq-alpha',
-      prompt,
+      model: 'llama3-8b-8192', // updating to a reliable groq model ID
+      messages: [{ role: 'user', content: prompt }],
       max_tokens: 200,
       temperature: 0.7,
     }),
@@ -58,7 +65,7 @@ const callGroq = async (prompt) => {
   }
 
   const data = await response.json()
-  return data.output?.[0]?.content || data.text || ''
+  return data.choices?.[0]?.message?.content || ''
 }
 
 router.post('/', async (req, res) => {
@@ -69,6 +76,23 @@ router.post('/', async (req, res) => {
   }
 
   try {
+    let tonePreference = 'friendly'
+
+    // Optional auth check to get tone preference
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1]
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await User.findById(decoded.id)
+        if (user && user.aiTonePreference) {
+          tonePreference = user.aiTonePreference
+        }
+      } catch (err) {
+        // Ignore auth errors for this route, just fallback to default tone
+      }
+    }
+
     let cachedUser = stats
 
     if (!cachedUser) {
@@ -82,8 +106,8 @@ router.post('/', async (req, res) => {
       cachedUser = stored
     }
 
-    const prompt = buildPrompt(cachedUser)
-    const summary = await callOpenAI(prompt)
+    const prompt = buildPrompt(cachedUser, tonePreference)
+    const summary = await callGroq(prompt)
 
     return res.json({ summary })
   } catch (error) {

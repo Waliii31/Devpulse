@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Geist', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
@@ -9,32 +9,64 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Core palette */
   --background: #0a0a0b;
-  --surface: #111112;
-  --surface-elevated: #161617;
-  --surface-container-low: #1a1a1b;
-  --surface-variant: #202021;
-  --border-subtle: #2a2a2c;
-  --text-primary: #f5f5f5;
-  --text-secondary: #a0a0a0;
+  --base-layer: #0A0A0B;
+  --surface: #131314;
+  --surface-elevated: #141415;
+  --surface-container-lowest: #0e0e0f;
+  --surface-container-low: #1c1b1c;
+  --surface-container: #201f20;
+  --surface-container-high: #2a2a2b;
+  --surface-container-highest: #353436;
+  --surface-bright: #3a393a;
+  --surface-variant: #353436;
+
+  /* Borders */
+  --border-subtle: #262626;
+
+  /* Text */
+  --text-primary: #E5E7EB;
+  --text-secondary: #9CA3AF;
   --text-on-accent: #07110c;
+  --on-surface: #e5e2e3;
+
+  /* Accents */
   --terminal-green: #10b981;
-  --cursor-amber: #f59e0b;
+  --primary: #4edea3;
+  --primary-container: #10b981;
+  --cursor-amber: #F59E0B;
+
+  /* Outline */
+  --outline: #86948a;
+  --outline-variant: #3c4a42;
 }
 
 :root.light {
   color-scheme: light;
   --background: #f5f7f8;
+  --base-layer: #f0f2f4;
   --surface: #ffffff;
   --surface-elevated: #f2f4f6;
+  --surface-container-lowest: #fafbfc;
   --surface-container-low: #e9ecef;
+  --surface-container: #e2e5e8;
+  --surface-container-high: #d5d9dd;
+  --surface-container-highest: #cdd2d7;
+  --surface-bright: #ffffff;
   --surface-variant: #dfe4e8;
   --border-subtle: #d2d8de;
   --text-primary: #111827;
   --text-secondary: #5b6472;
   --text-on-accent: #07110c;
+  --on-surface: #1a1a1a;
   --terminal-green: #10b981;
+  --primary: #059669;
+  --primary-container: #10b981;
   --cursor-amber: #f59e0b;
+  --outline: #8a9090;
+  --outline-variant: #b8c4bc;
 }
 
 body {
@@ -64,4 +96,80 @@ img {
 
 #root {
   min-height: 100vh;
+}
+
+/* ── Heatmap ─────────────────────────────────────────── */
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: var(--surface-container-low);
+  transition: background-color 0.15s ease;
+}
+
+.heatmap-cell[data-level="1"] { background-color: rgba(16, 185, 129, 0.25); }
+.heatmap-cell[data-level="2"] { background-color: rgba(16, 185, 129, 0.5); }
+.heatmap-cell[data-level="3"] { background-color: rgba(16, 185, 129, 0.75); }
+.heatmap-cell[data-level="4"] { background-color: rgba(16, 185, 129, 1); }
+
+.heatmap-cell:hover {
+  outline: 1px solid var(--terminal-green);
+  outline-offset: 1px;
+}
+
+/* ── Blinking Cursor ─────────────────────────────────── */
+.blinking-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background-color: var(--cursor-amber);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ── Custom Scrollbar ────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ── Typography Utilities ────────────────────────────── */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-geist {
+  font-family: 'Geist', sans-serif;
+}
+
+/* ── Bento Card ──────────────────────────────────────── */
+.bento-card {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+}
+
+/* ── Material Symbols sizing ─────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0;
+}
+
+/* ── Selection ───────────────────────────────────────── */
+::selection {
+  background: var(--terminal-green);
+  color: var(--text-on-accent);
 }

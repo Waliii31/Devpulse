@@ -89,26 +89,71 @@ router.get('/:username', async (req, res) => {
   let cached = await CachedUser.findOne({ username })
 
   if (cached && !cached.isStale()) {
-    return res.json(cached)
-  }
-
-  try {
-    const freshData = await fetchGitHubData(username)
-
-    cached = await CachedUser.findOneAndUpdate(
-      { username },
-      { ...freshData, fetchedAt: new Date() },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    )
-
-    return res.json(cached)
-  } catch (error) {
-    if (error.message.includes('404')) {
-      return res.status(404).json({ error: 'GitHub user not found' })
+    // If we have cached data, we can still record a snapshot
+  } else {
+    try {
+      const freshData = await fetchGitHubData(username)
+      cached = await CachedUser.findOneAndUpdate(
+        { username },
+        { ...freshData, fetchedAt: new Date() },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      )
+    } catch (error) {
+      if (error.message.includes('404')) {
+        return res.status(404).json({ error: 'GitHub user not found' })
+      }
+      return res.status(500).json({ error: error.message })
     }
-
-    return res.status(500).json({ error: error.message })
   }
+
+  // --- Snapshot Logic ---
+  try {
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1]
+      const jwt = await import('jsonwebtoken')
+      const User = (await import('../models/user.model.js')).default
+      const History = (await import('../models/history.model.js')).default
+
+      const decoded = jwt.default.verify(token, process.env.JWT_SECRET)
+      const user = await User.findById(decoded.id)
+      
+      // Check if this is the user's own profile (rough heuristic based on email prefix or githubId)
+      const userEmailPrefix = user.email.split('@')[0].toLowerCase()
+      if (user && (userEmailPrefix === username || req.query.isSelf === 'true')) {
+        // Find top language
+        const topLanguage = Object.entries(cached.languages || {})
+          .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown'
+
+        // Check if we already snapped today
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const existingSnapshot = await History.findOne({
+          user: user._id,
+          date: { $gte: today }
+        })
+
+        if (!existingSnapshot) {
+          await History.create({
+            user: user._id,
+            githubUsername: username,
+            snapshot: {
+              followers: cached.profile?.followers || 0,
+              publicRepos: cached.profile?.publicRepos || 0,
+              totalCommits: cached.activity?.reduce((acc, curr) => acc + curr.count, 0) || 0,
+              topLanguage,
+            }
+          })
+        }
+      }
+    }
+  } catch (err) {
+    // Silently ignore auth/snapshot errors to not block the main response
+    console.error('Snapshot error:', err)
+  }
+
+  return res.json(cached)
 })
 
 router.delete('/:username', async (req, res) => {

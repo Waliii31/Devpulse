@@ -10,11 +10,22 @@ const UserSchema = new mongoose.Schema({
   },
   passwordHash: {
     type: String,
-    required: true,
+    required: false, // Optional for OAuth users
+  },
+  githubId: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true, // Only enforce uniqueness if the field exists
   },
   favoriteUsernames: {
     type: [String],
     default: [],
+  },
+  aiTonePreference: {
+    type: String,
+    enum: ['friendly', 'motivational', 'technical', 'recruiter'],
+    default: 'friendly',
   },
   createdAt: {
     type: Date,

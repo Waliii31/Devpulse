@@ -1,57 +1,120 @@
-import { motion } from 'framer-motion'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useParams, useNavigate } from 'react-router-dom'
 
-type SidebarProps = {
-  open: boolean
-  onToggle: () => void
-}
-
-const links = [
-  { label: 'Overview', to: '/dashboard/octocat', icon: '⌁' },
-  { label: 'Activity', to: '/dashboard/octocat/activity', icon: '⚡' },
-  { label: 'Repositories', to: '/dashboard/octocat/repos', icon: '📁' },
-  { label: 'Favorites', to: '/dashboard/octocat/favorites', icon: '★' },
+const navItems = [
+  { label: 'Dashboard', icon: 'dashboard', path: '' },
+  { label: 'Repositories', icon: 'code', path: '/repos' },
+  { label: 'Activity', icon: 'analytics', path: '/activity' },
+  { label: 'My History', icon: 'history', path: '/history' },
+  { label: 'Compare', icon: 'compare_arrows', path: '/compare' },
 ]
 
-export function Sidebar({ open, onToggle }: SidebarProps) {
+export function Sidebar() {
+  const { username = 'octocat' } = useParams()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    navigate('/login')
+  }
+
   return (
-    <motion.aside
-      layout
-      animate={{ width: open ? 288 : 72 }}
-      style={{ minWidth: open ? 288 : 72, maxWidth: open ? 288 : 72 }}
-      className="relative flex shrink-0 flex-col overflow-hidden rounded-3xl border border-(--border-subtle) bg-[var(--surface-elevated) shadow-[0_24px_80px_rgba(0,0,0,0.18)"
-      transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+    <aside
+      id="dashboard-sidebar"
+      className="fixed left-0 top-16 hidden lg:flex flex-col"
+      style={{
+        width: '256px',
+        height: 'calc(100vh - 64px)',
+        backgroundColor: 'var(--surface-container-lowest)',
+        borderRight: '1px solid var(--border-subtle)',
+      }}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-(--border-subtle) p-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.35em] text-(--terminal-green)">Workspace</p>
-          {open ? <h2 className="mt-2 text-lg font-semibold text-(--text-primary)">DevPulse</h2> : null}
-        </div>
-        <button
-          type="button"
-          onClick={onToggle}
-          className="rounded-full border border-(--border-subtle) bg-[var(--surface) px-3 py-2 text-(--text-secondary) transition hover:border-(--terminal-green) hover:text-(--text-primary)"
-        >
-          {open ? '⇤' : '⇥'}
-        </button>
+      {/* Nav Links */}
+      <div className="flex-1 py-4 flex flex-col gap-1 px-3">
+        {navItems.map((item) => {
+          const to = `/dashboard/${username}${item.path}`
+
+          return (
+            <NavLink
+              key={item.label}
+              to={to}
+              end={item.path === ''}
+              className="flex items-center gap-3 px-3 py-2 rounded transition-all"
+              style={({ isActive }) => ({
+                color: isActive ? 'var(--terminal-green)' : 'var(--text-secondary)',
+                backgroundColor: isActive ? 'var(--surface-container-high)' : 'transparent',
+                borderRight: isActive ? '2px solid var(--terminal-green)' : '2px solid transparent',
+              })}
+              onMouseEnter={(e) => {
+                const link = e.currentTarget
+                if (!link.classList.contains('active')) {
+                  link.style.color = 'var(--on-surface)'
+                  link.style.backgroundColor = 'var(--surface-container)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                const link = e.currentTarget
+                // NavLink re-renders will reset this, but for safety:
+                const isActive = link.getAttribute('aria-current') === 'page'
+                if (!isActive) {
+                  link.style.color = 'var(--text-secondary)'
+                  link.style.backgroundColor = 'transparent'
+                }
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: '20px', fontVariationSettings: "'FILL' 0" }}
+              >
+                {item.icon}
+              </span>
+              <span
+                className="font-mono text-xs uppercase tracking-widest font-semibold"
+              >
+                {item.label}
+              </span>
+            </NavLink>
+          )
+        })}
       </div>
 
-      <nav className="flex flex-col gap-2 p-4">
-        {links.map((link) => (
-          <NavLink
-            key={link.label}
-            to={link.to}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition ${
-                isActive ? 'bg-[var(--terminal-green) text-(--text-on-accent)' : 'text-(--text-secondary) hover:bg-[var(--surface) hover:text-(--text-primary)'
-              }`
-            }
+      {/* Bottom Section: Logout */}
+      <div className="px-4 py-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <button
+          id="logout-button"
+          onClick={handleLogout}
+          className="w-full py-2 rounded flex items-center justify-center gap-2 transition-colors font-mono text-sm"
+          style={{
+            backgroundColor: 'transparent',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-primary)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#ef4444'
+            e.currentTarget.style.color = '#ef4444'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-subtle)'
+            e.currentTarget.style.color = 'var(--text-primary)'
+          }}
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: '18px', fontVariationSettings: "'FILL' 0" }}
           >
-            <span className="text-base">{link.icon}</span>
-            {open ? <span>{link.label}</span> : null}
-          </NavLink>
-        ))}
-      </nav>
-    </motion.aside>
+            logout
+          </span>
+          Logout
+        </button>
+        <div className="mt-3 text-center">
+          <span
+            className="font-mono text-xs tracking-widest"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            v1.0.4-stable
+          </span>
+        </div>
+      </div>
+    </aside>
   )
 }

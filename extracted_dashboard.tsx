@@ -1,7 +1,7 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { fetchJson } from '../../hooks/useApi'
 
 type GitHubProfile = {
@@ -69,9 +69,20 @@ function useHeatmapData(activity: Array<{ date: string; count: number }> | undef
         grid.push(week)
       }
     } else {
-      // Empty grid
+      // Generate mock data for visual effect
       for (let col = 0; col < cols; col++) {
-        grid.push(Array(7).fill(0))
+        const week: number[] = []
+        for (let row = 0; row < rows; row++) {
+          const activity = Math.random()
+          const weighting = col / cols
+          if (activity < 0.2 + weighting * 0.3) {
+            week.push(Math.floor(Math.random() * 4) + 1)
+            total += Math.floor(Math.random() * 10) + 1
+          } else {
+            week.push(0)
+          }
+        }
+        grid.push(week)
       }
     }
 
@@ -111,13 +122,6 @@ export function DashboardSection() {
 
   const news = newsData?.articles.slice(0, 5) ?? []
   const topRepos = profile?.repos.slice(0, 3) ?? []
-  const [showTutorial, setShowTutorial] = useState(false)
-
-  useEffect(() => {
-    if (window.location.search.includes('tutorial=true')) {
-      setShowTutorial(true)
-    }
-  }, [])
   const heatmap = useHeatmapData(profile?.activity)
 
   // Calculate language percentages
@@ -129,15 +133,15 @@ export function DashboardSection() {
       name: lang,
       percentage: Math.round((count / totalRepos) * 100),
       color:
-        lang?.toLowerCase() === 'typescript'
+        lang.toLowerCase() === 'typescript'
           ? '#3178c6'
-          : lang?.toLowerCase() === 'javascript'
+          : lang.toLowerCase() === 'javascript'
             ? '#f1e05a'
-            : lang?.toLowerCase() === 'python'
+            : lang.toLowerCase() === 'python'
               ? '#3572A5'
-              : lang?.toLowerCase() === 'html'
+              : lang.toLowerCase() === 'html'
                 ? '#e34c26'
-                : lang?.toLowerCase() === 'css'
+                : lang.toLowerCase() === 'css'
                   ? '#563d7c'
                   : 'var(--terminal-green)',
     }))
@@ -160,39 +164,7 @@ export function DashboardSection() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto p-6 relative">
-      <AnimatePresence>
-        {showTutorial && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 left-0 right-0 z-50 mx-4 mt-4"
-          >
-            <div className="bg-gradient-to-r from-[var(--terminal-green)] to-[var(--cursor-amber)] p-1 rounded-xl shadow-2xl">
-              <div className="bg-[var(--surface-container)] rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-[var(--terminal-green)] opacity-10 rounded-full blur-2xl pointer-events-none" />
-                <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-[var(--cursor-amber)] opacity-10 rounded-full blur-2xl pointer-events-none" />
-                <div className="flex-1 z-10">
-                  <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Welcome to DevPulse! 🎉</h3>
-                  <p className="text-[var(--text-secondary)]">
-                    You're currently viewing a demo profile. To track your own stats, 
-                    <strong className="text-[var(--text-primary)] mx-1">search for your GitHub username</strong> 
-                    in the top search bar!
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowTutorial(false)}
-                  className="z-10 px-6 py-2 bg-[var(--surface-container-high)] hover:bg-[var(--surface-container-highest)] text-[var(--text-primary)] rounded-lg transition-colors font-medium border border-[var(--border-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--terminal-green)] whitespace-nowrap"
-                >
-                  Got it!
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
+    <div className="max-w-[1440px] mx-auto p-6">
       {/* ── Profile Header ──────────────────────────── */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
@@ -383,8 +355,8 @@ export function DashboardSection() {
                     <span
                       className="font-mono text-[10px] uppercase leading-none rounded px-1.5 py-0.5"
                       style={
-                        article.source?.toLowerCase().includes('hn') ||
-                        article.source?.toLowerCase().includes('hacker')
+                        article.source.toLowerCase().includes('hn') ||
+                        article.source.toLowerCase().includes('hacker')
                           ? {
                               backgroundColor: 'rgba(255, 102, 0, 0.2)',
                               color: '#ff6600',
@@ -397,8 +369,8 @@ export function DashboardSection() {
                             }
                       }
                     >
-                      {(article.source?.length || 0) > 6
-                        ? article.source?.substring(0, 6)
+                      {article.source.length > 6
+                        ? article.source.substring(0, 6)
                         : article.source}
                     </span>
                     <span className="font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>
@@ -517,13 +489,13 @@ export function DashboardSection() {
                         className="w-2 h-2 rounded-full"
                         style={{
                           backgroundColor:
-                            repo.language?.toLowerCase() === 'typescript'
+                            repo.language.toLowerCase() === 'typescript'
                               ? '#3178c6'
-                              : repo.language?.toLowerCase() === 'javascript'
+                              : repo.language.toLowerCase() === 'javascript'
                                 ? '#f1e05a'
-                                : repo.language?.toLowerCase() === 'python'
+                                : repo.language.toLowerCase() === 'python'
                                   ? '#3572A5'
-                                  : repo.language?.toLowerCase() === 'html'
+                                  : repo.language.toLowerCase() === 'html'
                                     ? '#e34c26'
                                     : 'var(--terminal-green)',
                         }}
@@ -641,7 +613,7 @@ export function DashboardSection() {
               }}
             >
               {`function analyze(data) { return data.map(x => x * 2); } const config = { env: 'prod', debug: false };
-import { useMemo, useEffect, useState } from 'react'; export default function App() { return <div>Hello World</div>; }
+import { useMemo } from 'react'; export default function App() { return <div>Hello World</div>; }
 if (status === 'active') { deploy(); } else { abort(); }`}
             </div>
             <div className="relative z-10 flex items-start gap-4">

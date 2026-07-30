@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-
+import { API_BASE_URL } from '../../hooks/useApi'
 export function OAuthCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -17,7 +17,7 @@ export function OAuthCallback() {
 
     const exchangeCode = async () => {
       try {
-        const response = await fetch('/api/auth/github/callback', {
+        const response = await fetch(`${API_BASE_URL}/auth/github/callback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code }),

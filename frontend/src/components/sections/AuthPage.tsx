@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-
+import { API_BASE_URL } from '../../hooks/useApi'
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -43,7 +43,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/auth/${mode === 'login' ? 'login' : 'signup'}`, {
+      const response = await fetch(`${API_BASE_URL}/auth/${mode === 'login' ? 'login' : 'signup'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: data.email, password: data.password }),
@@ -73,8 +73,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const handleGithubAuth = async () => {
     try {
       setGithubLoading(true)
-      const res = await fetch('/api/auth/github/url')
-      const data = await res.json()
+      const response = await fetch(`${API_BASE_URL}/auth/github/url`)
+      const data = await response.json()
       if (data.url) {
         window.location.href = data.url
       } else {

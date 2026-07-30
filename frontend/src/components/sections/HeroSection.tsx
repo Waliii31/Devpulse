@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 
 export function HeroSection() {
   const [username, setUsername] = useState('')
@@ -8,36 +9,55 @@ export function HeroSection() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (username.trim()) {
-      navigate(`/dashboard/${username.trim()}`)
+      const token = localStorage.getItem('token')
+      const targetUrl = `/dashboard/${username.trim()}`
+      if (token) {
+        navigate(targetUrl)
+      } else {
+        navigate(`/login?redirect=${encodeURIComponent(targetUrl)}`)
+      }
     }
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-24 text-center lg:px-8 lg:py-32">
-      <div className="mb-10 max-w-4xl">
-        <div className="mb-6 flex-col items-center justify-center">
-          <span className="text-6xl text-(--terminal-green)">⌘</span>
-          <h1 className="text-4xl font-semibold tracking-tight text-(--text-primary) sm:text-5xl lg:text-6xl">
-            See your GitHub activity like never before
+    <section className="mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-24 text-center lg:px-8 lg:py-32 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-grid-pattern opacity-50" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="mb-10 max-w-4xl flex flex-col items-center justify-center"
+      >
+        <div className="mb-6 flex items-center justify-center gap-4">
+          <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl lg:text-6xl flex items-center gap-2">
+            See your GitHub activity <br className="hidden sm:block" /> like never before<span className="w-6 h-[48px] bg-[#f97316] animate-pulse rounded-sm inline-block translate-y-2"></span>
           </h1>
         </div>
-        <p className="mx-auto max-w-2xl text-lg text-(--text-secondary)">
+        <p className="mx-auto max-w-2xl text-lg text-[var(--text-secondary)] mt-6">
           AI-powered summaries, trending developer news, and deep activity insights in one terminal-inspired dashboard.
         </p>
-      </div>
+      </motion.div>
 
-      <form onSubmit={handleSubmit} className="relative mx-auto w-full max-w-2xl">
+      <motion.form
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        onSubmit={handleSubmit}
+        className="relative mx-auto w-full max-w-2xl flex items-center"
+      >
+        <span className="material-symbols-outlined absolute left-4 text-[var(--text-secondary)] z-10 pointer-events-none">search</span>
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="Enter a GitHub username..."
-          className="w-full rounded border border-(--border-subtle) bg-(--surface-elevated) px-4 py-4 pl-12 text-(--text-primary) outline-none transition focus:border-(--terminal-green)"
+          className="w-full rounded bg-[#1C1C1E] border border-[var(--border-subtle)] px-4 py-4 pl-12 text-[var(--text-primary)] font-mono outline-none transition focus:border-[var(--terminal-green)] shadow-2xl"
         />
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--text-secondary)">⌕</span>
-        <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-(--surface-variant) px-3 py-2 text-sm text-(--text-primary) transition hover:bg-(--terminal-green) hover:text-(--text-on-accent)">
-          Search
+        <button type="submit" className="absolute right-2 font-mono text-[10px] bg-[var(--surface-variant)] text-[var(--text-secondary)] px-3 py-1.5 rounded uppercase tracking-wider flex items-center gap-1 border border-[var(--border-subtle)] transition hover:border-[var(--terminal-green)] hover:text-[var(--terminal-green)]">
+          Enter <span className="material-symbols-outlined text-[12px]">keyboard_return</span>
         </button>
-      </form>
+      </motion.form>
     </section>
   )
 }

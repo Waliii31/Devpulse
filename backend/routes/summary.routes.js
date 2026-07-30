@@ -4,7 +4,7 @@ import User from '../models/user.model.js'
 import jwt from 'jsonwebtoken'
 
 const router = express.Router()
-const GROQ_URL = 'https://api.groq.com/v1/generation'
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 const buildPrompt = (cachedUser, tone) => {
   const topLanguages = Object.entries(cachedUser.languages || {})
@@ -52,7 +52,7 @@ const callGroq = async (prompt) => {
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192', // updating to a reliable groq model ID
+      model: 'llama-3.1-8b-instant', // updating to a reliable groq model ID
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 200,
       temperature: 0.7,

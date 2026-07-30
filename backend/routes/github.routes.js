@@ -57,6 +57,33 @@ const fetchGitHubData = async (username) => {
   const repos = await fetchJson(`${BASE_URL}/users/${username}/repos?per_page=100&sort=updated`)
   const events = await fetchJson(`${BASE_URL}/users/${username}/events/public?per_page=100`)
 
+  let heatmap = { grid: Array(52).fill(0).map(() => Array(7).fill(0)), total: 0 }
+  try {
+    const vercelRes = await fetch(`https://github-contributions.vercel.app/api/v1/${username}`)
+    if (vercelRes.ok) {
+      const vercelData = await vercelRes.json()
+      if (vercelData.contributions && vercelData.years) {
+        const today = new Date().toISOString().slice(0, 10)
+        let startIndex = vercelData.contributions.findIndex((c) => c.date <= today)
+        if (startIndex === -1) startIndex = 0
+
+        const lastYear = vercelData.contributions.slice(startIndex, startIndex + 364)
+        lastYear.reverse()
+
+        const grid = []
+        for (let i = 0; i < lastYear.length; i += 7) {
+          const weekChunk = lastYear.slice(i, i + 7)
+          grid.push(weekChunk.map((day) => parseInt(day.intensity, 10) || 0))
+        }
+
+        const total = vercelData.years.reduce((sum, y) => sum + y.total, 0)
+        heatmap = { grid, total }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch heatmap API:', err)
+  }
+
   return {
     username,
     profile: {
@@ -75,6 +102,7 @@ const fetchGitHubData = async (username) => {
     })),
     activity: buildActivity(events),
     languages: buildLanguages(repos),
+    heatmap,
     fetchedAt: new Date(),
   }
 }

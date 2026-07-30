@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function DashboardNavbar() {
   const { username = '' } = useParams()
@@ -52,6 +53,8 @@ export function DashboardNavbar() {
     }
   }, [])
 
+  const queryClient = useQueryClient()
+
   const handleToneChange = async (newTone: string) => {
     setAiTone(newTone)
     setIsDropdownOpen(false)
@@ -68,6 +71,7 @@ export function DashboardNavbar() {
       if (res.ok) {
         const data = await res.json()
         localStorage.setItem('user', JSON.stringify(data.user))
+        queryClient.invalidateQueries({ queryKey: ['summary', username] })
       }
     } catch (err) {
       console.error('Failed to save tone preference', err)

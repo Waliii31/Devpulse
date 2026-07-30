@@ -1,15 +1,14 @@
 export function FooterSection() {
   return (
-    <footer className="border-t border-(--border-subtle) bg-[var(--surface)/80 px-6 py-10 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-(--text-primary)">Built for developers who want clarity.</p>
-          <p className="mt-2 text-sm text-(--text-secondary)">© 2026 DevPulse. All rights reserved.</p>
-        </div>
-        <div className="flex gap-4 text-sm text-(--text-secondary)">
-          <a className="transition hover:text-(--terminal-green)" href="#features">Features</a>
-          <a className="transition hover:text-(--terminal-green)" href="#pricing">Pricing</a>
-          <a className="transition hover:text-(--terminal-green)" href="/signup">Sign up</a>
+    <footer className="w-full border-t border-[var(--border-subtle)] bg-[var(--surface)]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-6 py-8 md:flex-row lg:px-8">
+        <p className="font-mono text-[11px] text-[var(--terminal-green)] uppercase tracking-wider">
+          Built by Wali Zafri
+        </p>
+        <div className="flex items-center gap-6 font-mono text-[11px] text-[var(--text-secondary)]">
+          <a href="#" className="transition hover:text-[var(--text-primary)]">GitHub</a>
+          <a href="#" className="transition hover:text-[var(--text-primary)]">Twitter</a>
+          <a href="#" className="transition hover:text-[var(--text-primary)]">Status</a>
         </div>
       </div>
     </footer>

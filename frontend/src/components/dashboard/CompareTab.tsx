@@ -33,10 +33,17 @@ export function CompareTab() {
       const promises = validUsernames.map(async (user) => {
         const res = await fetch(`/api/github/${user}`)
         if (!res.ok) return null
-        return res.json() as Promise<GitHubStats>
+        const profileData = await res.json() as GitHubStats & { heatmap?: { total: number } }
+        
+        let totalCommits = profileData.activity.reduce((acc, curr) => acc + curr.count, 0)
+        if (profileData.heatmap?.total !== undefined) {
+          totalCommits = profileData.heatmap.total
+        }
+        
+        return { ...profileData, totalCommits }
       })
       const results = await Promise.all(promises)
-      return results.filter((r): r is GitHubStats => r !== null)
+      return results.filter((r): r is GitHubStats & { totalCommits: number } => r !== null)
     },
     enabled: validUsernames.length > 0,
   })
@@ -44,9 +51,7 @@ export function CompareTab() {
   // Colors for each profile
   const colors = ['var(--primary)', 'var(--cursor-amber)', '#3b82f6']
 
-  const maxCommits = Math.max(1, ...profiles.map(p => 
-    p.activity.reduce((acc, curr) => acc + curr.count, 0)
-  ))
+  const maxCommits = Math.max(1, ...profiles.map(p => p.totalCommits))
   const maxRepos = Math.max(1, ...profiles.map(p => p.profile.publicRepos))
   const maxFollowers = Math.max(1, ...profiles.map(p => p.profile.followers))
 
@@ -98,7 +103,7 @@ export function CompareTab() {
                 <span className="font-mono text-xs text-center" style={{ color: 'var(--text-secondary)' }}>Total Commits</span>
                 <div className="flex items-end justify-center gap-2 h-40">
                   {profiles.map((p, i) => {
-                    const commits = p.activity.reduce((acc, curr) => acc + curr.count, 0)
+                    const commits = p.totalCommits
                     const height = (commits / maxCommits) * 100
                     return (
                       <div key={p.username} className="w-12 rounded-t relative group flex justify-center" style={{ height: `${height}%`, minHeight: '4px', backgroundColor: colors[i] }}>

@@ -25,6 +25,7 @@ type GitHubProfile = {
   }>
   activity: Array<{ date: string; count: number }>
   languages: Record<string, number>
+  heatmap?: { grid: number[][]; total: number }
 }
 
 type NewsItem = {
@@ -41,43 +42,7 @@ type NewsResponse = {
   articles: NewsItem[]
 }
 
-// Generate heatmap data from activity
-function useHeatmapData(activity: Array<{ date: string; count: number }> | undefined) {
-  return useMemo(() => {
-    const cols = 52
-    const rows = 7
-    const grid: number[][] = []
-    let total = 0
-
-    if (activity && activity.length > 0) {
-      // Map actual activity data
-      const activityMap = new Map(activity.map((a) => [a.date, a.count]))
-      const now = new Date()
-
-      for (let col = 0; col < cols; col++) {
-        const week: number[] = []
-        for (let row = 0; row < rows; row++) {
-          const daysAgo = (cols - 1 - col) * 7 + (6 - row)
-          const date = new Date(now)
-          date.setDate(date.getDate() - daysAgo)
-          const dateStr = date.toISOString().split('T')[0]
-          const count = activityMap.get(dateStr) || 0
-          const level = count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 8 ? 3 : 4
-          week.push(level)
-          total += count
-        }
-        grid.push(week)
-      }
-    } else {
-      // Empty grid
-      for (let col = 0; col < cols; col++) {
-        grid.push(Array(7).fill(0))
-      }
-    }
-
-    return { grid, total }
-  }, [activity])
-}
+// Removed useHeatmapData function
 
 function getTimeAgo(dateStr: string): string {
   const now = new Date()
@@ -109,6 +74,22 @@ export function DashboardSection() {
     queryFn: () => fetchJson<NewsResponse>('/news'),
   })
 
+  const { data: summaryData, isLoading: summaryLoading } = useQuery({
+    queryKey: ['summary', username],
+    queryFn: async () => {
+      const res = await fetch(`/api/summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ username })
+      })
+      if (!res.ok) throw new Error('Failed to fetch summary')
+      return res.json()
+    }
+  })
+
   const news = newsData?.articles.slice(0, 5) ?? []
   const topRepos = profile?.repos.slice(0, 3) ?? []
   const [showTutorial, setShowTutorial] = useState(false)
@@ -118,7 +99,7 @@ export function DashboardSection() {
       setShowTutorial(true)
     }
   }, [])
-  const heatmap = useHeatmapData(profile?.activity)
+  const heatmap = profile?.heatmap || { grid: Array(52).fill(0).map(() => Array(7).fill(0)), total: 0 }
 
   // Calculate language percentages
   const languageStack = useMemo(() => {
@@ -176,8 +157,8 @@ export function DashboardSection() {
                 <div className="flex-1 z-10">
                   <h3 className="text-xl font-bold mb-2 text-[var(--text-primary)]">Welcome to DevPulse! 🎉</h3>
                   <p className="text-[var(--text-secondary)]">
-                    You're currently viewing a demo profile. To track your own stats, 
-                    <strong className="text-[var(--text-primary)] mx-1">search for your GitHub username</strong> 
+                    You're currently viewing a demo profile. To track your own stats,
+                    <strong className="text-[var(--text-primary)] mx-1">search for your GitHub username</strong>
                     in the top search bar!
                   </p>
                 </div>
@@ -192,7 +173,7 @@ export function DashboardSection() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* ── Profile Header ──────────────────────────── */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
@@ -310,9 +291,9 @@ export function DashboardSection() {
           {/* Heatmap Grid */}
           <div className="flex-1 w-full overflow-x-auto overflow-y-hidden pb-2 custom-scrollbar">
             <div className="flex gap-1 min-w-max">
-              {heatmap.grid.map((week, colIdx) => (
+              {heatmap.grid.map((week: number[], colIdx: number) => (
                 <div key={colIdx} className="flex flex-col gap-1">
-                  {week.map((level, rowIdx) => (
+                  {week.map((level: number, rowIdx: number) => (
                     <div
                       key={rowIdx}
                       className="heatmap-cell"
@@ -384,17 +365,17 @@ export function DashboardSection() {
                       className="font-mono text-[10px] uppercase leading-none rounded px-1.5 py-0.5"
                       style={
                         article.source?.toLowerCase().includes('hn') ||
-                        article.source?.toLowerCase().includes('hacker')
+                          article.source?.toLowerCase().includes('hacker')
                           ? {
-                              backgroundColor: 'rgba(255, 102, 0, 0.2)',
-                              color: '#ff6600',
-                              border: '1px solid rgba(255, 102, 0, 0.3)',
-                            }
+                            backgroundColor: 'rgba(255, 102, 0, 0.2)',
+                            color: '#ff6600',
+                            border: '1px solid rgba(255, 102, 0, 0.3)',
+                          }
                           : {
-                              backgroundColor: 'var(--border-subtle)',
-                              color: 'var(--text-primary)',
-                              border: '1px solid rgba(156, 163, 175, 0.3)',
-                            }
+                            backgroundColor: 'var(--border-subtle)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid rgba(156, 163, 175, 0.3)',
+                          }
                       }
                     >
                       {(article.source?.length || 0) > 6
@@ -667,24 +648,7 @@ if (status === 'active') { deploy(); } else { abort(); }`}
                   style={{ color: 'var(--text-primary)' }}
                 >
                   {'> '}
-                  This week, {profile?.profile.name || username} focused on{' '}
-                  {topRepos[0]?.language || 'development'} projects
-                  {topRepos[0] && (
-                    <>
-                      {'. High activity noted in '}
-                      <span
-                        style={{
-                          color: 'var(--terminal-green)',
-                          borderBottom: '1px solid rgba(16, 185, 129, 0.3)',
-                        }}
-                      >
-                        {topRepos[0].name}
-                      </span>
-                    </>
-                  )}
-                  . Network growth steady (+{profile?.profile.followers ?? 0} followers).
-                  {languageStack[0] &&
-                    ` Language breakdown shows a heavy reliance on ${languageStack[0].name}.`}
+                  {summaryLoading ? 'Analyzing developer activity...' : summaryData?.summary || 'No AI summary available.'}
                   <span className="blinking-cursor" />
                 </p>
               </div>

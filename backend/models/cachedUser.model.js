@@ -34,6 +34,10 @@ const CachedUserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {},
   },
+  heatmap: {
+    grid: [[Number]],
+    total: Number,
+  },
   fetchedAt: {
     type: Date,
     default: Date.now,

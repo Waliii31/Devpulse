@@ -1,45 +1,70 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+const signupSchema = loginSchema.extend({
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+})
+
+type SignupFormValues = z.infer<typeof signupSchema>
 
 export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const [searchParams] = useSearchParams()
+  const redirectUrl = searchParams.get('redirect')
+
+  const [authError, setAuthError] = useState('')
   const [loading, setLoading] = useState(false)
   const [githubLoading, setGithubLoading] = useState(false)
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    setError('')
+  const schema = mode === 'login' ? loginSchema : signupSchema
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(schema as any),
+    defaultValues: { email: '', password: '', confirmPassword: '' }
+  })
 
-    if (mode === 'signup' && password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
+  const onSubmit = async (data: any) => {
+    setAuthError('')
     setLoading(true)
 
     try {
       const response = await fetch(`/api/auth/${mode === 'login' ? 'login' : 'signup'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: data.email, password: data.password }),
       })
 
-      const data = await response.json()
+      const resData = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed')
+        throw new Error(resData.error || 'Authentication failed')
       }
 
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      navigate(`/dashboard/${(data.user?.email || 'octocat').split('@')[0]}`)
+      localStorage.setItem('token', resData.token)
+      localStorage.setItem('user', JSON.stringify(resData.user))
+      
+      if (redirectUrl) {
+        navigate(redirectUrl)
+      } else {
+        navigate(`/dashboard/${(resData.user?.email || 'octocat').split('@')[0]}`)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      setAuthError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {
       setLoading(false)
     }
@@ -56,7 +81,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         throw new Error('Failed to get GitHub URL')
       }
     } catch (err) {
-      setError('Failed to initiate GitHub login')
+      setAuthError('Failed to initiate GitHub login')
       setGithubLoading(false)
     }
   }
@@ -102,7 +127,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         </header>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           {/* Email Input */}
           <div className="flex flex-col gap-2">
             <label
@@ -133,16 +158,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               </span>
               <input
                 id="email"
-                name="email"
                 type="email"
                 placeholder="sysadmin@devpulse.io"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register('email')}
                 className="terminal-input w-full bg-transparent border-none font-mono text-[14px] font-medium pl-10 py-3 pr-3"
                 style={{ color: 'var(--text-primary)' }}
               />
             </div>
+            {errors.email?.message && (
+              <p className="text-sm text-red-400 font-mono mt-1">{String(errors.email.message)}</p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -188,16 +213,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               </span>
               <input
                 id="password"
-                name="password"
                 type="password"
                 placeholder="••••••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                {...register('password')}
                 className="terminal-input w-full bg-transparent border-none font-mono text-[14px] font-medium pl-10 py-3 pr-3"
                 style={{ color: 'var(--text-primary)' }}
               />
             </div>
+            {errors.password?.message && (
+              <p className="text-sm text-red-400 font-mono mt-1">{String(errors.password.message)}</p>
+            )}
           </div>
 
           {/* Confirm Password Input (Signup only) */}
@@ -206,7 +231,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               <label
                 className="font-mono text-[11px] leading-[16px] tracking-[0.1em] font-semibold uppercase"
                 style={{ color: 'var(--text-secondary)' }}
-                htmlFor="confirm-password"
+                htmlFor="confirmPassword"
               >
                 Confirm Password
               </label>
@@ -230,21 +255,21 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                   lock
                 </span>
                 <input
-                  id="confirm-password"
-                  name="confirm-password"
+                  id="confirmPassword"
                   type="password"
                   placeholder="••••••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
+                  {...register('confirmPassword')}
                   className="terminal-input w-full bg-transparent border-none font-mono text-[14px] font-medium pl-10 py-3 pr-3"
                   style={{ color: 'var(--text-primary)' }}
                 />
               </div>
+              {errors.confirmPassword?.message && (
+                <p className="text-sm text-red-400 font-mono mt-1">{String(errors.confirmPassword.message)}</p>
+              )}
             </div>
           )}
 
-          {error && <p className="text-sm text-red-400 font-mono">{error}</p>}
+          {authError && <p className="text-sm text-red-400 font-mono">{authError}</p>}
 
           {/* Submit Button */}
           <button

@@ -9,7 +9,6 @@ import { Navbar } from './components/layout/Navbar'
 import { PageShell } from './components/layout/PageShell'
 import { DashboardNavbar } from './components/dashboard/DashboardNavbar'
 import { Sidebar } from './components/dashboard/Sidebar'
-import { AboutSection } from './components/sections/AboutSection'
 import { AuthPage } from './components/sections/AuthPage'
 import { OAuthCallback } from './components/sections/OAuthCallback'
 import { DashboardSection } from './components/sections/DashboardSection'
@@ -18,12 +17,13 @@ import { RepositoriesTab } from './components/dashboard/RepositoriesTab'
 import { FavoritesTab } from './components/dashboard/FavoritesTab'
 import { HistoryTab } from './components/dashboard/HistoryTab'
 import { CompareTab } from './components/dashboard/CompareTab'
-import { FaqSection } from './components/sections/FaqSection'
-import { FeatureSection } from './components/sections/FeatureSection'
-import { FooterSection } from './components/sections/FooterSection'
 import { HeroSection } from './components/sections/HeroSection'
+import { CapabilitiesSection } from './components/sections/CapabilitiesSection'
+import { MissionLogSection } from './components/sections/MissionLogSection'
+import { FaqSection } from './components/sections/FaqSection'
+import { ContactSection } from './components/sections/ContactSection'
+import { FooterSection } from './components/sections/FooterSection'
 import { NotFoundPage } from './components/sections/NotFoundPage'
-import { PricingSection } from './components/sections/PricingSection'
 import { store } from './store'
 
 const queryClient = new QueryClient()
@@ -57,7 +57,7 @@ function DashboardLayout() {
         {/* Hide sidebar padding on mobile where sidebar is hidden */}
         <style>{`
           @media (max-width: 1023px) {
-            main { padding-left: 0 !important; }
+            main { padding-left: 0 !important; padding-bottom: 64px !important; }
           }
         `}</style>
         <PageTransition>
@@ -158,10 +158,10 @@ function LandingPage() {
       <Navbar />
       <main>
         <HeroSection />
-        <FeatureSection />
-        <AboutSection />
-        <PricingSection />
+        <CapabilitiesSection />
+        <MissionLogSection />
         <FaqSection />
+        <ContactSection />
       </main>
       <FooterSection />
     </PageShell>

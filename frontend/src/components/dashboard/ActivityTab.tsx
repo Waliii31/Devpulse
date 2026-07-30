@@ -21,6 +21,7 @@ type GitHubProfile = {
   }>
   activity: Array<{ date: string; count: number }>
   languages: Record<string, number>
+  heatmap?: { grid: number[][]; total: number }
 }
 
 type ActivityEvent = {

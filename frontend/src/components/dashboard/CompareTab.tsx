@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-
+import { API_BASE_URL } from '../../hooks/useApi'
 interface GitHubStats {
   username: string
   profile: {
@@ -31,7 +31,7 @@ export function CompareTab() {
     queryFn: async () => {
       if (validUsernames.length === 0) return []
       const promises = validUsernames.map(async (user) => {
-        const res = await fetch(`/api/github/${user}`)
+        const res = await fetch(`${API_BASE_URL}/github/${user}`)
         if (!res.ok) return null
         const profileData = await res.json() as GitHubStats & { heatmap?: { total: number } }
         

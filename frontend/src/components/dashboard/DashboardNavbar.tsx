@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
-
+import { API_BASE_URL } from '../../hooks/useApi'
 export function DashboardNavbar() {
   const { username = '' } = useParams()
   const navigate = useNavigate()
@@ -60,7 +60,7 @@ export function DashboardNavbar() {
     setIsDropdownOpen(false)
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('/api/users/preferences', {
+      const res = await fetch(`${API_BASE_URL}/users/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

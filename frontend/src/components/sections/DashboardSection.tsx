@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { useMemo, useEffect, useState } from 'react'
-import { fetchJson } from '../../hooks/useApi'
+import { fetchJson, API_BASE_URL } from '../../hooks/useApi'
 
 type GitHubProfile = {
   username: string
@@ -77,7 +77,7 @@ export function DashboardSection() {
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ['summary', username],
     queryFn: async () => {
-      const res = await fetch(`/api/summary`, {
+      const res = await fetch(`${API_BASE_URL}/summary`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

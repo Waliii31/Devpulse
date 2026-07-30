@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-
+import { API_BASE_URL } from '../../hooks/useApi'
 interface Snapshot {
   followers: number
   publicRepos: number
@@ -30,7 +30,7 @@ export function HistoryTab() {
           return
         }
 
-        const res = await fetch('/api/history', {
+        const res = await fetch(`${API_BASE_URL}/history`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

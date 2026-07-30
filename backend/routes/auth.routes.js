@@ -90,7 +90,7 @@ router.post('/logout', authMiddleware, (req, res) => {
 
 router.get('/github/url', (req, res) => {
   const clientId = process.env.GITHUB_CLIENT_ID
-  const redirectUri = 'http://localhost:5174/auth/github/callback' // Update for production if needed
+  const redirectUri = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/auth/github/callback` : 'http://localhost:5174/auth/github/callback'
   
   if (!clientId) {
     return res.status(500).json({ error: 'GitHub OAuth is not configured' })

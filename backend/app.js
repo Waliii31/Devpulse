@@ -9,12 +9,14 @@ import favoritesRoutes from './routes/favorites.routes.js'
 import userRoutes from './routes/user.routes.js'
 import historyRoutes from './routes/history.routes.js'
 import healthRoutes from './routes/health.routes.js'
+import cors from 'cors'
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }))
 app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/github', githubRoutes)

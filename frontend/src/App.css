@@ -1,0 +1,9 @@
+body {
+  background-image: linear-gradient(var(--surface-elevated) 1px, transparent 1px), linear-gradient(90deg, var(--surface-elevated) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+::selection {
+  background: var(--terminal-green);
+  color: var(--text-on-accent);
+}

@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --background: #0a0a0b;
+  --surface: #111112;
+  --surface-elevated: #161617;
+  --surface-container-low: #1a1a1b;
+  --surface-variant: #202021;
+  --border-subtle: #2a2a2c;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-on-accent: #07110c;
+  --terminal-green: #10b981;
+  --cursor-amber: #f59e0b;
+}
+
+:root.light {
+  color-scheme: light;
+  --background: #f5f7f8;
+  --surface: #ffffff;
+  --surface-elevated: #f2f4f6;
+  --surface-container-low: #e9ecef;
+  --surface-variant: #dfe4e8;
+  --border-subtle: #d2d8de;
+  --text-primary: #111827;
+  --text-secondary: #5b6472;
+  --text-on-accent: #07110c;
+  --terminal-green: #10b981;
+  --cursor-amber: #f59e0b;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, textarea {
+  font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+#root {
+  min-height: 100vh;
+}
